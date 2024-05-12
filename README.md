@@ -23,11 +23,12 @@ Para ejecutar el script con los valores por defecto, simplemente navega a la car
 
 ```bash
 python genesis_block_miner.py
-
+```
 Para especificar un timestamp personalizado y otros parámetros, puedes usar el comando de la siguiente manera:
 
+```bash
 python genesis_block_miner.py -z "El inicio de mi criptomoneda" -t 1609459200 -p "0411abcde..." -r 1000000000
-
+```
 Esto configurará el bloque génesis con un timestamp personalizado, un tiempo UNIX específico, una clave pública determinada y una recompensa de 1000000000 unidades de la criptomoneda.
 
 ### Requisitos
