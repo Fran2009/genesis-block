@@ -1,6 +1,7 @@
 import hashlib
 import struct
 import time
+import argparse
 
 def sha256d(data):
     """Aplica sha256 dos veces para crear un hash doble."""
@@ -31,36 +32,37 @@ def mine_genesis_block(nTime, nBits, nVersion, genesisReward, pszTimestamp, pubk
     coinbase_tx = create_coinbase_transaction(pszTimestamp.encode('utf-8'), pubkey_script, genesisReward)
     target = get_target(nBits)
     
-    for nonce in range(4294967295):  # Máximo valor para un uint32
+    for nonce in range(4294967295):
         genesis_block_header = create_block_header(coinbase_tx, nTime, nBits, nonce, nVersion)
         genesis_hash = int(sha256d(genesis_block_header)[::-1].hex(), 16)
         print(f"Testing nonce: {nonce}, Hash: 0x{genesis_hash:064x}, Target: 0x{target:064x}", end='\r')
         if genesis_hash < target:
-            print()  # Asegura que el siguiente mensaje aparezca en una nueva línea
+            print()
             return nonce, genesis_hash, sha256d(coinbase_tx).hex()
 
-    print()  # Asegura que el siguiente mensaje aparezca en una nueva línea
-    return -1, None, None  # Si no se encuentra un nonce válido
+    print()
+    return -1, None, None
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Genesis Block Miner for a Custom Cryptocurrency')
+    parser.add_argument('-z', '--timestamp', help='Custom timestamp for the genesis block.', default="La peseta fue la moneda de curso legal en España y sus territorios de ultramar desde su aprobación el 19 de octubre de 1868 hasta el 28 de febrero de 2002")
+    parser.add_argument('-t', '--time', help='UNIX timestamp for the genesis block.', type=int, default=int(time.time()))
+    parser.add_argument('-p', '--pubkey', help='Public key hex string for the genesis block.', default="0315069ef0eed8ba096147cb2783a37cc7b28869dc79f1220a6085734a06ccf9f0")
+    parser.add_argument('-r', '--reward', help='Genesis block reward.', type=int, default=5500 * 10**8)
+    return parser.parse_args()
 
 def main():
-    timestamp = "La peseta fue la moneda de curso legal en España y sus territorios de ultramar desde su aprobación el 19 de octubre de 1868 hasta el 28 de febrero de 2002"
-    pubkey_hex = "0315069ef0eed8ba096147cb2783a37cc7b28869dc79f1220a6085734a06ccf9f0"
-    pubkey_script = bytes.fromhex(pubkey_hex) + b'\xac'  # OP_CHECKSIG
-    nTime = int(time.time())
-    nBits = 0x1d00ffff  # Dificultad estándar de Bitcoin para el bloque génesis
-    nVersion = 1
-    genesisReward = 5500 * 10**8
-
-    nonce, genesis_hash, hashMerkleRoot = mine_genesis_block(nTime, nBits, nVersion, genesisReward, timestamp, pubkey_script)
-
+    args = parse_args()
+    nonce, genesis_hash, hashMerkleRoot = mine_genesis_block(args.time, 0x1d00ffff, 1, args.reward, args.timestamp, bytes.fromhex(args.pubkey))
+    
     if nonce != -1:
         print(f"Nonce:          {nonce}")
         print(f"Genesis Hash:   0x{genesis_hash:064x}")
         print(f"Merkle Root:    {hashMerkleRoot}")
-        print(f"Timestamp:      {nTime}")
-        print(f"Pubkey:         {pubkey_hex}")
-        print(f"Coins:          {genesisReward}")
-        print(f"Psz:            '{timestamp}'")
+        print(f"Timestamp:      {args.time}")
+        print(f"Pubkey:         {args.pubkey}")
+        print(f"Coins:          {args.reward}")
+        print(f"Psz:            '{args.timestamp}'")
     else:
         print("No valid nonce found.")
 
